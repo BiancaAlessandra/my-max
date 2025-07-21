@@ -5,7 +5,7 @@ Widget load() {
   return Positioned.fill(
     child: Container(
       color: corPreto.withOpacity(0.3),
-      child: Center(child: CircularProgressIndicator()),
+      child: Center(child: CircularProgressIndicator(color: corPadrao)),
     ),
   );
 }
