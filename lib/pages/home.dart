@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mymax/globals/components.dart';
 import 'package:mymax/globals/styles.dart';
+import 'package:mymax/pages/detail.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,9 +11,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  TextEditingController pesquisarController = TextEditingController();
   bool loadTela = false;
+  List movimentos_filtrados = [];
 
-  List movimentos = [
+  List movimentos_originais = [
     (nome: 'Snatch', cargaMax: 50.0),
     (nome: 'Power Snatch', cargaMax: 55.0),
     (nome: 'Squat Snatch', cargaMax: 60.0),
@@ -50,42 +53,125 @@ class _HomePageState extends State<HomePage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    movimentos_filtrados = movimentos_originais;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: corPadrao,
+          elevation: 0,
+          centerTitle: true,
+          automaticallyImplyLeading: false,
+          title: Image.asset('assets/images/logo.png', height: 20),
+        ),
         body: Stack(
           children: [
             Container(
               padding: EdgeInsets.all(20),
-              child: ListView.builder(
-                itemCount: movimentos.length,
-                itemBuilder: (context, index) {
-                  final movimento = movimentos[index];
-                  return Container(
-                    margin: EdgeInsets.symmetric(vertical: 10),
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: corPadrao.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(10),
+              child: Column(
+                children: [
+                  TextFormField(
+                    decoration: InputDecoration(
+                      hintText: 'Pesquisar',
+                      hintStyle: TextStyle(color: corFonte),
+                      prefixIcon: Icon(Icons.search, color: corFonte),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: corFonte),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: corFonte),
+                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            movimento.nome,
-                            style: TextStyle(fontSize: 16),
+                    style: TextStyle(color: corFonte),
+                    controller: pesquisarController,
+                    onChanged: (value) {
+                      setState(() {
+                        if (value.isNotEmpty) {
+                          movimentos_filtrados = movimentos_originais
+                              .where(
+                                (m) => m.nome.toLowerCase().contains(
+                                  value.toLowerCase(),
+                                ),
+                              )
+                              .toList();
+                        } else {
+                          movimentos_filtrados = movimentos_originais;
+                        }
+                      });
+                    },
+                  ),
+                  SizedBox(height: 20),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: movimentos_filtrados.length,
+                      itemBuilder: (context, index) {
+                        final movimento = movimentos_filtrados[index];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DetailPage(
+                                  nome: movimento.nome,
+                                  cargaMax: movimento.cargaMax,
+                                  dataAtualizacao:
+                                      DateTime.now(), // depois você pode salvar isso por movimento
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            margin: EdgeInsets.symmetric(vertical: 10),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: corPadrao.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      movimento.nome,
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(
+                                        color: corFonte,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    '${movimento.cargaMax.toStringAsFixed(1)} kg',
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                      color: corFonte,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Text(
-                          '${movimento.cargaMax.toStringAsFixed(1)} kg',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
             ),
             loadTela == true ? load() : Container(),
